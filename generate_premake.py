@@ -11,19 +11,11 @@ project("{}")
   kind("StaticLib")
   language("C")
   ffmpeg_common()
+{}
 
   filter("files:not wmaprodec.c")
     warnings "Off"
   filter({{}})
-"""
-
-templates = {}
-templates['libavutil'] = template_header.format('libavutil', '19216035-F781-4F15-B009-213B7E3A18AC')
-
-templates['libavcodec'] =  template_header.format('libavcodec', '9DB2830C-D326-48ED-B4CC-08EA6A1B7272') + """
-  links({
-    "libavutil",
-  })
 """
 class Config():
     def __init__(self, os, arch, config_h, premake_filters):
@@ -34,11 +26,54 @@ class Config():
         self.key_values = []
 
 supported_configs = [
-    Config('windows', 'x86_64' , 'config_windows_x86_64.h' , 'platforms:Windows'),
-    Config('linux'  , 'x86_64' , 'config_linux_x86_64.h'   , 'platforms:Linux'),
-    Config('android', 'x86_64' , 'config_android_x86_64.h' , 'platforms:Android_x86_64'),
-    Config('android', 'aarch64', 'config_android_aarch64.h', 'platforms:Android_ARM64'),
+    Config('windows', 'x86_64' , 'config_windows_x86_64.h' , 'platforms:Windows-x86_64'),
+    Config('windows', 'aarch64', 'config_windows_aarch64.h', 'platforms:Windows-ARM64'),
+    Config('linux'  , 'x86_64' , 'config_linux_x86_64.h'   , 'platforms:Linux-x86_64'),
+    Config('linux'  , 'aarch64', 'config_linux_aarch64.h'  , 'platforms:Linux-ARM64'),
+    Config('android', 'x86_64' , 'config_android_x86_64.h' , 'platforms:Android-x86_64'),
+    Config('android', 'aarch64', 'config_android_aarch64.h', 'platforms:Android-ARM64'),
 ]
+
+def make_config_includes(configs):
+    lines = []
+    for config in configs:
+        if config.os == 'windows':
+            include_opt = "/FI" + config.config_h
+        else:
+            include_opt = "-include " + config.config_h
+        lines.append('  filter({"' + config.premake_filters + '"})')
+        lines.append('    buildoptions({ "' + include_opt + '" })')
+    lines.append('  filter({})')
+    return '\n'.join(lines)
+
+config_includes = make_config_includes(supported_configs)
+
+templates = {}
+templates['libavutil'] = template_header.format(
+    'libavutil',
+    '19216035-F781-4F15-B009-213B7E3A18AC',
+    config_includes,
+)
+
+templates['libavcodec'] = template_header.format(
+    'libavcodec',
+    '9DB2830C-D326-48ED-B4CC-08EA6A1B7272',
+    config_includes,
+) + """
+  links({
+    "libavutil",
+  })
+"""
+templates['libavformat'] = template_header.format(
+    'libavformat',
+    'CC02A970-0085-4EE7-BA9B-D4CCCD9C1F6E',
+    config_includes,
+) + """
+  links({
+    "libavcodec",
+    "libavutil",
+  })
+"""
 
 def are_list_items_identical(list_a, list_b):
     set_a = set(list_a)
@@ -90,7 +125,10 @@ def parse_makefile(fn, conf, g=None):
     optional dictionary is passed in as the second argument, it is
     used instead of a new dictionary.
     """
-    from distutils.text_file import TextFile
+    try:
+        from distutils.text_file import TextFile
+    except ModuleNotFoundError:
+        from setuptools._distutils.text_file import TextFile
     fp = TextFile(fn, strip_comments=1, skip_blanks=1, join_lines=1, errors="surrogateescape")
 
     if g is None:
@@ -222,11 +260,16 @@ def generate_premake(configs, libname):
     M = 'Makefile'
 
     makefiles = [
-        (os.path.join(libname, M)           , configs),
-        # Original Makefiles are always included but since symbols are never used we can ignore them:
-        (os.path.join(libname, 'aarch64', M), list(filter(lambda config: config.arch == 'aarch64', configs))),
-        (os.path.join(libname, 'x86' , M)   , list(filter(lambda config: config.arch == 'x86_64', configs))),
+        (os.path.join(libname, M), configs),
     ]
+    # Original Makefiles are always included but since symbols are never used we can ignore them:
+    arch_makefiles = [
+        (os.path.join(libname, 'aarch64', M), list(filter(lambda config: config.arch == 'aarch64', configs))),
+        (os.path.join(libname, 'x86', M), list(filter(lambda config: config.arch == 'x86_64', configs))),
+    ]
+    for makefile in arch_makefiles:
+        if os.path.exists(makefile[0]):
+            makefiles.append(makefile)
 
     # Makefile variables that contain source files - conditionals from arch.mak
     file_blocks = [

@@ -14,23 +14,23 @@ function ffmpeg_common()
   includedirs({ 
     ffmpeg_root,
   })
-  filter({"platforms:Windows", "configurations:Debug or configurations:Checked"})
+  filter({"platforms:Windows-*", "configurations:Debug or configurations:Checked"})
     optimize("Size") -- dead code elimination is mandatory
     removebuildoptions({
       "/RTCsu",      -- '/O1' and '/RTCs' command-line options are incompatible
     })
-  filter({"platforms:Windows", "configurations:Release"})
+  filter({"platforms:Windows-*", "configurations:Release"})
     removeflags({
       "LinkTimeOptimization", -- disable whole program optimization, breaks dead code elimination
     })
-  filter("platforms:Windows")
+  filter("platforms:Windows-*")
     includedirs({
       ffmpeg_root .. "/compat/atomics/win32",
     })
     links({
       "bcrypt",
     })
-  filter("platforms:Linux")
+  filter("platforms:Linux-*")
     includedirs({
       ffmpeg_root .. "/compat/atomics/gcc",
     })
@@ -38,4 +38,5 @@ function ffmpeg_common()
 end
 
 include("libavcodec/premake5.lua")
+include("libavformat/premake5.lua")
 include("libavutil/premake5.lua")

@@ -8,6 +8,24 @@ project("libavutil")
   kind("StaticLib")
   language("C")
   ffmpeg_common()
+  filter({"platforms:Windows-x86_64"})
+    buildoptions({ "/FIconfig_windows_x86_64.h" })
+  filter({"platforms:Windows-ARM64"})
+    buildoptions({ "/FIconfig_windows_aarch64.h" })
+  filter({"platforms:Linux-x86_64"})
+    buildoptions({ "-include config_linux_x86_64.h" })
+  filter({"platforms:Linux-ARM64"})
+    buildoptions({ "-include config_linux_aarch64.h" })
+  filter({"platforms:Android-x86_64"})
+    buildoptions({ "-include config_android_x86_64.h" })
+  filter({"platforms:Android-ARM64"})
+    buildoptions({ "-include config_android_aarch64.h" })
+  filter({})
+
+  filter("files:not wmaprodec.c")
+    warnings "Off"
+  filter({})
+
   -- libavutil/Makefile:
   --   HEADERS:
   files({
@@ -96,7 +114,6 @@ project("libavutil")
     "tx.h",
     "film_grain_params.h",
   })
-  -- libavutil/Makefile:
   --   ARCH_HEADERS:
   files({
     "bswap.h",
@@ -104,13 +121,11 @@ project("libavutil")
     "intreadwrite.h",
     "timer.h",
   })
-  -- libavutil/Makefile:
   --   BUILT_HEADERS:
   files({
     "avconfig.h",
     "ffversion.h",
   })
-  -- libavutil/Makefile:
   --   OBJS:
   files({
     "adler32.c",
@@ -190,14 +205,25 @@ project("libavutil")
     "video_enc_params.c",
     "film_grain_params.c",
   })
+
   -- libavutil/aarch64/Makefile:
   --   OBJS:
+  filter({"platforms:Android-ARM64 or platforms:Linux-ARM64 or platforms:Windows-ARM64"})
   files({
     "aarch64/cpu.c",
     "aarch64/float_dsp_init.c",
   })
+  filter({})
+  --   NEON-OBJS:
+  filter({"platforms:Android-ARM64 or platforms:Linux-ARM64"})
+  files({
+    "aarch64/float_dsp_neon.S",
+  })
+  filter({})
+
   -- libavutil/x86/Makefile:
   --   OBJS:
+  filter({"platforms:Android-x86_64 or platforms:Linux-x86_64 or platforms:Windows-x86_64"})
   files({
     "x86/cpu.c",
     "x86/fixed_dsp_init.c",
@@ -205,3 +231,4 @@ project("libavutil")
     "x86/imgutils_init.c",
     "x86/lls_init.c",
   })
+  filter({})
