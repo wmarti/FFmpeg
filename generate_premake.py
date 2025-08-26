@@ -37,6 +37,8 @@ supported_configs = [
     Config('windows', 'x86_64' , 'config_windows_x86_64.h' , 'platforms:Windows-x86_64'),
     Config('windows', 'aarch64', 'config_windows_aarch64.h', 'platforms:Windows-ARM64'),
     Config('linux'  , 'x86_64' , 'config_linux_x86_64.h'   , 'platforms:Linux'),
+    Config('linux'  , 'aarch64', 'config_linux_aarch64.h'  , 'platforms:Linux-ARM64'),
+    Config('macos'  , 'aarch64', 'config_macos_aarch64.h'  , 'platforms:Mac'),
     Config('android', 'x86_64' , 'config_android_x86_64.h' , 'platforms:Android-x86_64'),
     Config('android', 'aarch64', 'config_android_aarch64.h', 'platforms:Android-ARM64'),
 ]
@@ -275,6 +277,21 @@ def generate_premake(configs, libname):
                         fb += '-yes' # Evaluated conditionals
 
                 if len(files):
+                    # Special handling for Mac NEON assembly files (.S)
+                    # The NEON-OBJS contain assembly files that don't work on macOS
+                    if file_block[0] == 'NEON-OBJS' and (libname == 'libavcodec' or libname == 'libavutil'):
+                        # Remove all NEON assembly for Mac platform (they're .o in the dict but .S in source)
+                        new_files = {}
+                        for filename, file_configs in files.items():
+                            # Remove Mac from configs for all NEON assembly files
+                            new_configs = set()
+                            for c in file_configs:
+                                if c.os != 'macos':
+                                    new_configs.add(c)
+                            if new_configs:
+                                new_files[filename] = new_configs
+                        files = new_files
+                    
                     # Get unique config groups
                     config_sets = []
                     for file_configs in files.values():
@@ -299,6 +316,15 @@ def generate_premake(configs, libname):
                         premake.write(premake_files([filename for filename, file_configs in files.items() if are_list_items_identical(config_set, file_configs)], libname))
                     if filter_used:
                         premake.write(premake_filter())
+                    
+                    # Add Mac stubs after NEON-OBJS
+                    if file_block[0] == 'NEON-OBJS' and libname == 'libavcodec':
+                        mac_config = next((c for c in configs if c.os == 'macos'), None)
+                        if mac_config:
+                            premake.write('  -- macOS ARM64 stubs (instead of .S files):\n')
+                            premake.write(premake_filter([mac_config.premake_filters]))
+                            premake.write(premake_files(['../macos_aarch64_stubs.c'], libname))
+                            premake.write(premake_filter())
 
 if __name__ == '__main__':
     parse_configs()

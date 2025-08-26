@@ -111,18 +111,24 @@ project("libavcodec")
 
   -- libavcodec/aarch64/Makefile:
   --   OBJS:
-  filter({"platforms:Android-ARM64 or platforms:Windows-ARM64"})
+  filter({"platforms:Android-ARM64 or platforms:Linux-ARM64 or platforms:Mac or platforms:Windows-ARM64"})
   files({
     "aarch64/fft_init_aarch64.c",
     "aarch64/idctdsp_init_aarch64.c",
   })
   filter({})
   --   NEON-OBJS:
-  filter({"platforms:Android-ARM64"})
+  filter({"platforms:Android-ARM64 or platforms:Linux-ARM64"})
   files({
     "aarch64/fft_neon.S",
     "aarch64/simple_idct_neon.S",
     "aarch64/mdct_neon.S",
+  })
+  filter({})
+  -- macOS ARM64 stubs (instead of .S files):
+  filter({"platforms:Mac"})
+  files({
+    "../macos_aarch64_stubs.c",
   })
   filter({})
 

@@ -6,8 +6,18 @@
 #else
 #error "windows arch unsupported"
 #endif
+#elif defined(__APPLE__)
+#if defined(__aarch64__)
+#include "config_macos_aarch64.h"
+#else
+#error "macos arch unsupported - only ARM64 is supported"
+#endif
 #elif defined(__gnu_linux__)
+#if defined(__aarch64__)
+#include "config_linux_aarch64.h"
+#else
 #include "config_linux_x86_64.h"
+#endif
 #elif defined(__ANDROID__)
 #if defined(__aarch64__)
 #include "config_android_aarch64.h"
