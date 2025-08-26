@@ -7,7 +7,11 @@
 #error "windows arch unsupported"
 #endif
 #elif defined(__gnu_linux__)
+#if defined(__aarch64__)
+#include "config_linux_aarch64.h"
+#else
 #include "config_linux_x86_64.h"
+#endif
 #elif defined(__ANDROID__)
 #if defined(__aarch64__)
 #include "config_android_aarch64.h"
