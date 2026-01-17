@@ -9,8 +9,10 @@
 #elif defined(__APPLE__)
 #if defined(__aarch64__)
 #include "config_macos_aarch64.h"
+#elif defined(__x86_64__) || defined(__amd64__)
+#include "config_macos_x86_64.h"
 #else
-#error "macos arch unsupported - only ARM64 is supported"
+#error "macos arch unsupported"
 #endif
 #elif defined(__gnu_linux__)
 #if defined(__aarch64__)
