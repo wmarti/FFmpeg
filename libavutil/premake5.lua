@@ -202,7 +202,7 @@ project("libavutil")
   })
   filter({})
   --   NEON-OBJS:
-  filter({"platforms:Android-ARM64 or platforms:Linux-ARM64"})
+  filter({"platforms:Android-ARM64 or platforms:Linux-ARM64 or platforms:Mac-ARM64"})
   files({
     "aarch64/float_dsp_neon.S",
   })
@@ -210,7 +210,7 @@ project("libavutil")
 
   -- libavutil/x86/Makefile:
   --   OBJS:
-  filter({"platforms:Android-x86_64 or platforms:Linux or platforms:Windows-x86_64 or platforms:Mac-x86_64"})
+  filter({"platforms:Android-x86_64 or platforms:Linux or platforms:Mac-x86_64 or platforms:Windows-x86_64"})
   files({
     "x86/cpu.c",
     "x86/fixed_dsp_init.c",

@@ -37,4 +37,5 @@ function ffmpeg_common()
 end
 
 include("libavcodec/premake5.lua")
+include("libavformat/premake5.lua")
 include("libavutil/premake5.lua")

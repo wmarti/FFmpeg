@@ -25,6 +25,12 @@ templates['libavcodec'] =  template_header.format('libavcodec', '9DB2830C-D326-4
     "libavutil",
   })
 """
+templates['libavformat'] = template_header.format('libavformat', 'CC02A970-0085-4EE7-BA9B-D4CCCD9C1F6E') + """
+  links({
+    "libavcodec",
+    "libavutil",
+  })
+"""
 class Config():
     def __init__(self, os, arch, config_h, premake_filters):
         self.os = os
@@ -38,7 +44,8 @@ supported_configs = [
     Config('windows', 'aarch64', 'config_windows_aarch64.h', 'platforms:Windows-ARM64'),
     Config('linux'  , 'x86_64' , 'config_linux_x86_64.h'   , 'platforms:Linux'),
     Config('linux'  , 'aarch64', 'config_linux_aarch64.h'  , 'platforms:Linux-ARM64'),
-    Config('macos'  , 'aarch64', 'config_macos_aarch64.h'  , 'platforms:Mac'),
+    Config('macos'  , 'x86_64' , 'config_macos_x86_64.h'   , 'platforms:Mac-x86_64'),
+    Config('macos'  , 'aarch64', 'config_macos_aarch64.h'  , 'platforms:Mac-ARM64'),
     Config('android', 'x86_64' , 'config_android_x86_64.h' , 'platforms:Android-x86_64'),
     Config('android', 'aarch64', 'config_android_aarch64.h', 'platforms:Android-ARM64'),
 ]
@@ -93,7 +100,42 @@ def parse_makefile(fn, conf, g=None):
     optional dictionary is passed in as the second argument, it is
     used instead of a new dictionary.
     """
-    from distutils.text_file import TextFile
+    try:
+        from distutils.text_file import TextFile
+    except ImportError:
+        # distutils was removed in Python 3.12; provide a minimal fallback.
+        class TextFile:
+            def __init__(self, filename, strip_comments=1, skip_blanks=1,
+                         join_lines=1, errors=None):
+                with open(filename, 'r', errors=errors) as f:
+                    raw_lines = f.readlines()
+                lines = []
+                buffer = ""
+                for line in raw_lines:
+                    if strip_comments:
+                        line = line.split('#', 1)[0]
+                    if join_lines:
+                        stripped = line.rstrip()
+                        if stripped.endswith("\\"):
+                            buffer += stripped[:-1]
+                            continue
+                        line = buffer + line
+                        buffer = ""
+                    if skip_blanks and not line.strip():
+                        continue
+                    lines.append(line)
+                self._lines = lines
+                self._index = 0
+
+            def readline(self):
+                if self._index >= len(self._lines):
+                    return None
+                line = self._lines[self._index]
+                self._index += 1
+                return line
+
+            def close(self):
+                pass
     fp = TextFile(fn, strip_comments=1, skip_blanks=1, join_lines=1, errors="surrogateescape")
 
     if g is None:
@@ -225,11 +267,18 @@ def generate_premake(configs, libname):
     M = 'Makefile'
 
     makefiles = [
-        (os.path.join(libname, M)           , configs),
-        # Original Makefiles are always included but since symbols are never used we can ignore them:
-        (os.path.join(libname, 'aarch64', M), list(filter(lambda config: config.arch == 'aarch64', configs))),
-        (os.path.join(libname, 'x86' , M)   , list(filter(lambda config: config.arch == 'x86_64', configs))),
+        (os.path.join(libname, M), configs),
     ]
+    # Original Makefiles are always included but since symbols are never used we can ignore them:
+    arch_makefiles = [
+        (os.path.join(libname, 'aarch64', M),
+         list(filter(lambda config: config.arch == 'aarch64', configs))),
+        (os.path.join(libname, 'x86', M),
+         list(filter(lambda config: config.arch == 'x86_64', configs))),
+    ]
+    for path, config_set in arch_makefiles:
+        if os.path.exists(path):
+            makefiles.append((path, config_set))
 
     # Makefile variables that contain source files - conditionals from arch.mak
     file_blocks = [
@@ -277,20 +326,6 @@ def generate_premake(configs, libname):
                         fb += '-yes' # Evaluated conditionals
 
                 if len(files):
-                    # Special handling for Mac NEON assembly files (.S)
-                    # The NEON-OBJS contain assembly files that don't work on macOS
-                    if file_block[0] == 'NEON-OBJS' and (libname == 'libavcodec' or libname == 'libavutil'):
-                        # Remove all NEON assembly for Mac platform (they're .o in the dict but .S in source)
-                        new_files = {}
-                        for filename, file_configs in files.items():
-                            # Remove Mac from configs for all NEON assembly files
-                            new_configs = set()
-                            for c in file_configs:
-                                if c.os != 'macos':
-                                    new_configs.add(c)
-                            if new_configs:
-                                new_files[filename] = new_configs
-                        files = new_files
                     
                     # Get unique config groups
                     config_sets = []
@@ -317,14 +352,6 @@ def generate_premake(configs, libname):
                     if filter_used:
                         premake.write(premake_filter())
                     
-                    # Add Mac stubs after NEON-OBJS
-                    if file_block[0] == 'NEON-OBJS' and libname == 'libavcodec':
-                        mac_config = next((c for c in configs if c.os == 'macos'), None)
-                        if mac_config:
-                            premake.write('  -- macOS ARM64 stubs (instead of .S files):\n')
-                            premake.write(premake_filter([mac_config.premake_filters]))
-                            premake.write(premake_files(['../macos_aarch64_stubs.c'], libname))
-                            premake.write(premake_filter())
 
 if __name__ == '__main__':
     parse_configs()
