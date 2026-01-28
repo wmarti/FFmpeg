@@ -29,7 +29,11 @@ function ffmpeg_common()
     links({
       "bcrypt",
     })
-  filter("platforms:Linux")
+  filter("platforms:Linux*")
+    includedirs({
+      ffmpeg_root .. "/compat/atomics/gcc",
+    })
+  filter("platforms:Mac*")
     includedirs({
       ffmpeg_root .. "/compat/atomics/gcc",
     })
