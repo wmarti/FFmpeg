@@ -26,17 +26,23 @@
 
 #include "libavcodec/fft.h"
 
+#if HAVE_NEON_EXTERNAL
 void ff_fft_permute_neon(FFTContext *s, FFTComplex *z);
 void ff_fft_calc_neon(FFTContext *s, FFTComplex *z);
 
-void ff_imdct_calc_neon(FFTContext *s, FFTSample *output, const FFTSample *input);
-void ff_imdct_half_neon(FFTContext *s, FFTSample *output, const FFTSample *input);
-void ff_mdct_calc_neon(FFTContext *s, FFTSample *output, const FFTSample *input);
+void ff_imdct_calc_neon(FFTContext *s, FFTSample *output,
+                        const FFTSample *input);
+void ff_imdct_half_neon(FFTContext *s, FFTSample *output,
+                        const FFTSample *input);
+void ff_mdct_calc_neon(FFTContext *s, FFTSample *output,
+                       const FFTSample *input);
+#endif
 
 av_cold void ff_fft_init_aarch64(FFTContext *s)
 {
     int cpu_flags = av_get_cpu_flags();
 
+#if HAVE_NEON_EXTERNAL
     if (have_neon(cpu_flags)) {
         s->fft_permute  = ff_fft_permute_neon;
         s->fft_calc     = ff_fft_calc_neon;
@@ -47,4 +53,7 @@ av_cold void ff_fft_init_aarch64(FFTContext *s)
         s->mdct_permutation = FF_MDCT_PERM_INTERLEAVE;
 #endif
     }
+#else
+    (void)cpu_flags;
+#endif
 }
