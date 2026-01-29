@@ -159,3 +159,14 @@ project("libavcodec")
     "x86/fdct.c",
   })
   filter({})
+
+  -- For Linux cmake compatibility (premake-cmake doesn't properly handle platform filters)
+  if os.istarget("linux") and (TARGET_ARCH == "x86_64" or os.outputof("uname -m"):match("x86_64")) then
+    files({
+      "x86/constants.c",
+      "x86/fdctdsp_init.c",
+      "x86/fft_init.c",
+      "x86/idctdsp_init.c",
+      "x86/fdct.c",
+    })
+  end

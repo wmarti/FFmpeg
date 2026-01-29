@@ -236,3 +236,14 @@ project("libavutil")
     "x86/lls_init.c",
   })
   filter({})
+
+  -- For Linux cmake compatibility (premake-cmake doesn't properly handle platform filters)
+  if os.istarget("linux") and (TARGET_ARCH == "x86_64" or os.outputof("uname -m"):match("x86_64")) then
+    files({
+      "x86/cpu.c",
+      "x86/fixed_dsp_init.c",
+      "x86/float_dsp_init.c",
+      "x86/imgutils_init.c",
+      "x86/lls_init.c",
+    })
+  end
