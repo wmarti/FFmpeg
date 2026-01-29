@@ -117,7 +117,18 @@ int av_strerror(int errnum, char *errbuf, size_t errbuf_size)
         av_strlcpy(errbuf, entry->str, errbuf_size);
     } else {
 #if HAVE_STRERROR_R
+#if defined(__GLIBC__) && defined(__USE_GNU)
+        {
+            char *msg = strerror_r(AVUNERROR(errnum), errbuf, errbuf_size);
+            if (msg) {
+                av_strlcpy(errbuf, msg, errbuf_size);
+            } else {
+                ret = -1;
+            }
+        }
+#else
         ret = AVERROR(strerror_r(AVUNERROR(errnum), errbuf, errbuf_size));
+#endif
 #else
         ret = -1;
 #endif
