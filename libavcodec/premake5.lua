@@ -12,7 +12,7 @@ project("libavcodec")
     buildoptions({ "/FIconfig_windows_x86_64.h" })
   filter({"platforms:Windows-ARM64"})
     buildoptions({ "/FIconfig_windows_aarch64.h" })
-  filter({"platforms:Linux"})
+  filter({"platforms:Linux-x86_64"})
     buildoptions({ "-include config_linux_x86_64.h" })
   filter({"platforms:Linux-ARM64"})
     buildoptions({ "-include config_linux_aarch64.h" })
@@ -145,7 +145,7 @@ project("libavcodec")
 
   -- libavcodec/x86/Makefile:
   --   OBJS:
-  filter({"platforms:Android-x86_64 or platforms:Linux or platforms:Mac-x86_64 or platforms:Windows-x86_64"})
+  filter({"platforms:Android-x86_64 or platforms:Linux-x86_64 or platforms:Mac-x86_64 or platforms:Windows-x86_64"})
   files({
     "x86/constants.c",
     "x86/fdctdsp_init.c",
@@ -154,7 +154,7 @@ project("libavcodec")
   })
   filter({})
   --   MMX-OBJS:
-  filter({"platforms:Android-x86_64 or platforms:Linux or platforms:Mac-x86_64 or platforms:Windows-x86_64"})
+  filter({"platforms:Android-x86_64 or platforms:Linux-x86_64 or platforms:Mac-x86_64 or platforms:Windows-x86_64"})
   files({
     "x86/fdct.c",
   })
