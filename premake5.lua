@@ -26,6 +26,11 @@ function ffmpeg_common()
     includedirs({
       ffmpeg_root .. "/compat/atomics/win32",
     })
+    -- Force-include compat stdatomic.h to prevent MSVC's C11 stdatomic.h from being used
+    -- (MSVC's version requires /std:c17 which we don't want to enable globally)
+    forceincludes({
+      "stdatomic.h",
+    })
     links({
       "bcrypt",
     })
