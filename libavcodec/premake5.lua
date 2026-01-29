@@ -160,13 +160,24 @@ project("libavcodec")
   })
   filter({})
 
-  -- For Linux cmake compatibility (premake-cmake doesn't properly handle platform filters)
-  if os.istarget("linux") and (TARGET_ARCH == "x86_64" or os.outputof("uname -m"):match("x86_64")) then
-    files({
-      "x86/constants.c",
-      "x86/fdctdsp_init.c",
-      "x86/fft_init.c",
-      "x86/idctdsp_init.c",
-      "x86/fdct.c",
-    })
+  -- For cmake compatibility (premake-cmake doesn't properly handle platform filters)
+  -- These files are added unconditionally based on target OS and arch at premake time
+  if os.istarget("linux") then
+    if TARGET_ARCH == "x86_64" then
+      files({
+        "x86/constants.c",
+        "x86/fdctdsp_init.c",
+        "x86/fft_init.c",
+        "x86/idctdsp_init.c",
+        "x86/fdct.c",
+      })
+    elseif TARGET_ARCH == "ARM64" then
+      files({
+        "aarch64/fft_init_aarch64.c",
+        "aarch64/idctdsp_init_aarch64.c",
+        "aarch64/fft_neon.S",
+        "aarch64/simple_idct_neon.S",
+        "aarch64/mdct_neon.S",
+      })
+    end
   end

@@ -237,13 +237,22 @@ project("libavutil")
   })
   filter({})
 
-  -- For Linux cmake compatibility (premake-cmake doesn't properly handle platform filters)
-  if os.istarget("linux") and (TARGET_ARCH == "x86_64" or os.outputof("uname -m"):match("x86_64")) then
-    files({
-      "x86/cpu.c",
-      "x86/fixed_dsp_init.c",
-      "x86/float_dsp_init.c",
-      "x86/imgutils_init.c",
-      "x86/lls_init.c",
-    })
+  -- For cmake compatibility (premake-cmake doesn't properly handle platform filters)
+  -- These files are added unconditionally based on target OS and arch at premake time
+  if os.istarget("linux") then
+    if TARGET_ARCH == "x86_64" then
+      files({
+        "x86/cpu.c",
+        "x86/fixed_dsp_init.c",
+        "x86/float_dsp_init.c",
+        "x86/imgutils_init.c",
+        "x86/lls_init.c",
+      })
+    elseif TARGET_ARCH == "ARM64" then
+      files({
+        "aarch64/cpu.c",
+        "aarch64/float_dsp_init.c",
+        "aarch64/float_dsp_neon.S",
+      })
+    end
   end
