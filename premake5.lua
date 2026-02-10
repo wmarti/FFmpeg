@@ -14,15 +14,15 @@ function ffmpeg_common()
   includedirs({ 
     ffmpeg_root,
   })
-  filter({"platforms:Windows-*", "configurations:Debug or configurations:Checked"})
+  filter({"platforms:Windows*", "configurations:Debug or configurations:Checked"})
     optimize("Size") -- dead code elimination is mandatory
     removebuildoptions({
       "/RTCsu",      -- '/O1' and '/RTCs' command-line options are incompatible
     })
-  filter({"platforms:Windows-*", "configurations:Release"})
+  filter({"platforms:Windows*", "configurations:Release"})
     -- Disable whole program optimization; keep DCE behavior for FFmpeg.
     linktimeoptimization("Off")
-  filter("platforms:Windows-*")
+  filter("platforms:Windows*")
     includedirs({
       ffmpeg_root .. "/compat/atomics/win32",
     })

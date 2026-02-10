@@ -12,6 +12,10 @@ project("libavutil")
     buildoptions({ "/FIconfig_windows_x86_64.h" })
   filter({"platforms:Windows-ARM64"})
     buildoptions({ "/FIconfig_windows_aarch64.h" })
+  filter({"platforms:Windows", "architecture:x86_64"})
+    buildoptions({ "/FIconfig_windows_x86_64.h" })
+  filter({"platforms:Windows", "architecture:ARM64"})
+    buildoptions({ "/FIconfig_windows_aarch64.h" })
   filter({"platforms:Linux-x86_64"})
     buildoptions({ "-include config_linux_x86_64.h" })
   filter({"platforms:Linux-ARM64"})
@@ -217,6 +221,11 @@ project("libavutil")
     "aarch64/cpu.c",
     "aarch64/float_dsp_init.c",
   })
+  filter({"platforms:Windows", "architecture:ARM64"})
+  files({
+    "aarch64/cpu.c",
+    "aarch64/float_dsp_init.c",
+  })
   filter({})
   --   NEON-OBJS:
   filter({"platforms:Android-ARM64 or platforms:Linux-ARM64 or platforms:Mac-ARM64"})
@@ -228,6 +237,14 @@ project("libavutil")
   -- libavutil/x86/Makefile:
   --   OBJS:
   filter({"platforms:Android-x86_64 or platforms:Linux-x86_64 or platforms:Mac-x86_64 or platforms:Windows-x86_64"})
+  files({
+    "x86/cpu.c",
+    "x86/fixed_dsp_init.c",
+    "x86/float_dsp_init.c",
+    "x86/imgutils_init.c",
+    "x86/lls_init.c",
+  })
+  filter({"platforms:Windows", "architecture:x86_64"})
   files({
     "x86/cpu.c",
     "x86/fixed_dsp_init.c",

@@ -12,6 +12,10 @@ project("libavformat")
     buildoptions({ "/FIconfig_windows_x86_64.h" })
   filter({"platforms:Windows-ARM64"})
     buildoptions({ "/FIconfig_windows_aarch64.h" })
+  filter({"platforms:Windows", "architecture:x86_64"})
+    buildoptions({ "/FIconfig_windows_x86_64.h" })
+  filter({"platforms:Windows", "architecture:ARM64"})
+    buildoptions({ "/FIconfig_windows_aarch64.h" })
   filter({"platforms:Linux-x86_64"})
     buildoptions({ "-include config_linux_x86_64.h" })
   filter({"platforms:Linux-ARM64"})
@@ -61,7 +65,7 @@ project("libavformat")
     "url.c",
     "utils.c",
   })
-  filter({"platforms:Windows-ARM64 or platforms:Windows-x86_64"})
+  filter({"platforms:Windows or platforms:Windows-ARM64 or platforms:Windows-x86_64"})
   files({
     "file_open.c",
   })
