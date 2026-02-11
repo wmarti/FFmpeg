@@ -251,7 +251,9 @@ av_cold int ff_fft_init(FFTContext *s, int nbits, int inverse)
     if (ARCH_AARCH64) ff_fft_init_aarch64(s);
     if (ARCH_ARM)     ff_fft_init_arm(s);
     if (ARCH_PPC)     ff_fft_init_ppc(s);
+#if HAVE_X86ASM
     if (ARCH_X86)     ff_fft_init_x86(s);
+#endif
     if (HAVE_MIPSFPU) ff_fft_init_mips(s);
 #endif
     for(j=4; j<=nbits; j++) {

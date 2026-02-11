@@ -156,8 +156,10 @@ av_cold AVFloatDSPContext *avpriv_float_dsp_alloc(int bit_exact)
         ff_float_dsp_init_arm(fdsp);
     if (ARCH_PPC)
         ff_float_dsp_init_ppc(fdsp, bit_exact);
+#if HAVE_X86ASM
     if (ARCH_X86)
         ff_float_dsp_init_x86(fdsp);
+#endif
     if (ARCH_MIPS)
         ff_float_dsp_init_mips(fdsp);
     return fdsp;

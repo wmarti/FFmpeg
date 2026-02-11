@@ -8,6 +8,27 @@ project("libavutil")
   kind("StaticLib")
   language("C")
   ffmpeg_common()
+  filter({"platforms:Windows-x86_64"})
+    buildoptions({ "/FIconfig_windows_x86_64.h" })
+  filter({"platforms:Windows-ARM64"})
+    buildoptions({ "/FIconfig_windows_aarch64.h" })
+  filter({"platforms:Windows", "architecture:x86_64"})
+    buildoptions({ "/FIconfig_windows_x86_64.h" })
+  filter({"platforms:Windows", "architecture:ARM64"})
+    buildoptions({ "/FIconfig_windows_aarch64.h" })
+  filter({"platforms:Linux-x86_64"})
+    buildoptions({ "-include config_linux_x86_64.h" })
+  filter({"platforms:Linux-ARM64"})
+    buildoptions({ "-include config_linux_aarch64.h" })
+  filter({"platforms:Mac-x86_64"})
+    buildoptions({ "-include config_macos_x86_64.h" })
+  filter({"platforms:Mac-ARM64"})
+    buildoptions({ "-include config_macos_aarch64.h" })
+  filter({"platforms:Android-x86_64"})
+    buildoptions({ "-include config_android_x86_64.h" })
+  filter({"platforms:Android-ARM64"})
+    buildoptions({ "-include config_android_aarch64.h" })
+  filter({})
 
   filter("files:not wmaprodec.c")
     warnings "Off"
@@ -195,14 +216,19 @@ project("libavutil")
 
   -- libavutil/aarch64/Makefile:
   --   OBJS:
-  filter({"platforms:Android-ARM64"})
+  filter({"platforms:Android-ARM64 or platforms:Linux-ARM64 or platforms:Mac-ARM64 or platforms:Windows-ARM64"})
+  files({
+    "aarch64/cpu.c",
+    "aarch64/float_dsp_init.c",
+  })
+  filter({"platforms:Windows", "architecture:ARM64"})
   files({
     "aarch64/cpu.c",
     "aarch64/float_dsp_init.c",
   })
   filter({})
   --   NEON-OBJS:
-  filter({"platforms:Android-ARM64"})
+  filter({"platforms:Android-ARM64 or platforms:Linux-ARM64 or platforms:Mac-ARM64"})
   files({
     "aarch64/float_dsp_neon.S",
   })
@@ -210,7 +236,15 @@ project("libavutil")
 
   -- libavutil/x86/Makefile:
   --   OBJS:
-  filter({"platforms:Android-x86_64 or platforms:Linux or platforms:Windows"})
+  filter({"platforms:Android-x86_64 or platforms:Linux-x86_64 or platforms:Mac-x86_64 or platforms:Windows-x86_64"})
+  files({
+    "x86/cpu.c",
+    "x86/fixed_dsp_init.c",
+    "x86/float_dsp_init.c",
+    "x86/imgutils_init.c",
+    "x86/lls_init.c",
+  })
+  filter({"platforms:Windows", "architecture:x86_64"})
   files({
     "x86/cpu.c",
     "x86/fixed_dsp_init.c",
@@ -219,3 +253,23 @@ project("libavutil")
     "x86/lls_init.c",
   })
   filter({})
+
+  -- For cmake compatibility (premake-cmake doesn't properly handle platform filters)
+  -- These files are added unconditionally based on target OS and arch at premake time
+  if os.istarget("linux") then
+    if TARGET_ARCH == "x86_64" then
+      files({
+        "x86/cpu.c",
+        "x86/fixed_dsp_init.c",
+        "x86/float_dsp_init.c",
+        "x86/imgutils_init.c",
+        "x86/lls_init.c",
+      })
+    elseif TARGET_ARCH == "ARM64" then
+      files({
+        "aarch64/cpu.c",
+        "aarch64/float_dsp_init.c",
+        "aarch64/float_dsp_neon.S",
+      })
+    end
+  end

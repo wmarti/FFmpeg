@@ -14,21 +14,31 @@ function ffmpeg_common()
   includedirs({ 
     ffmpeg_root,
   })
-  filter({"platforms:Windows", "configurations:Debug or configurations:Checked"})
+  filter({"platforms:Windows*", "configurations:Debug or configurations:Checked"})
     optimize("Size") -- dead code elimination is mandatory
     removebuildoptions({
       "/RTCsu",      -- '/O1' and '/RTCs' command-line options are incompatible
     })
-  filter({"platforms:Windows", "configurations:Release"})
+  filter({"platforms:Windows*", "configurations:Release"})
+    -- Disable whole program optimization; keep DCE behavior for FFmpeg.
     linktimeoptimization("Off")
-  filter("platforms:Windows")
+  filter("platforms:Windows*")
     includedirs({
       ffmpeg_root .. "/compat/atomics/win32",
+    })
+    -- Force-include compat stdatomic.h to prevent MSVC's C11 stdatomic.h from being used
+    -- (MSVC's version requires /std:c17 which we don't want to enable globally)
+    forceincludes({
+      "stdatomic.h",
     })
     links({
       "bcrypt",
     })
-  filter("platforms:Linux")
+  filter("platforms:Linux-*")
+    includedirs({
+      ffmpeg_root .. "/compat/atomics/gcc",
+    })
+  filter("platforms:Mac*")
     includedirs({
       ffmpeg_root .. "/compat/atomics/gcc",
     })

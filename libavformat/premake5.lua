@@ -8,6 +8,27 @@ project("libavformat")
   kind("StaticLib")
   language("C")
   ffmpeg_common()
+  filter({"platforms:Windows-x86_64"})
+    buildoptions({ "/FIconfig_windows_x86_64.h" })
+  filter({"platforms:Windows-ARM64"})
+    buildoptions({ "/FIconfig_windows_aarch64.h" })
+  filter({"platforms:Windows", "architecture:x86_64"})
+    buildoptions({ "/FIconfig_windows_x86_64.h" })
+  filter({"platforms:Windows", "architecture:ARM64"})
+    buildoptions({ "/FIconfig_windows_aarch64.h" })
+  filter({"platforms:Linux-x86_64"})
+    buildoptions({ "-include config_linux_x86_64.h" })
+  filter({"platforms:Linux-ARM64"})
+    buildoptions({ "-include config_linux_aarch64.h" })
+  filter({"platforms:Mac-x86_64"})
+    buildoptions({ "-include config_macos_x86_64.h" })
+  filter({"platforms:Mac-ARM64"})
+    buildoptions({ "-include config_macos_aarch64.h" })
+  filter({"platforms:Android-x86_64"})
+    buildoptions({ "-include config_android_x86_64.h" })
+  filter({"platforms:Android-ARM64"})
+    buildoptions({ "-include config_android_aarch64.h" })
+  filter({})
 
   filter("files:not wmaprodec.c")
     warnings "Off"
@@ -52,8 +73,14 @@ project("libavformat")
     "replaygain.c",
     "file.c",
   })
-  filter({"platforms:Windows"})
+  filter({"platforms:Windows or platforms:Windows-ARM64 or platforms:Windows-x86_64"})
   files({
     "file_open.c",
+  })
+  filter({"platforms:Mac-ARM64 or platforms:Mac-x86_64"})
+  files({
+    "network.c",
+    "wavdec.c",
+    "pcm.c",
   })
   filter({})

@@ -8,6 +8,27 @@ project("libavcodec")
   kind("StaticLib")
   language("C")
   ffmpeg_common()
+  filter({"platforms:Windows-x86_64"})
+    buildoptions({ "/FIconfig_windows_x86_64.h" })
+  filter({"platforms:Windows-ARM64"})
+    buildoptions({ "/FIconfig_windows_aarch64.h" })
+  filter({"platforms:Windows", "architecture:x86_64"})
+    buildoptions({ "/FIconfig_windows_x86_64.h" })
+  filter({"platforms:Windows", "architecture:ARM64"})
+    buildoptions({ "/FIconfig_windows_aarch64.h" })
+  filter({"platforms:Linux-x86_64"})
+    buildoptions({ "-include config_linux_x86_64.h" })
+  filter({"platforms:Linux-ARM64"})
+    buildoptions({ "-include config_linux_aarch64.h" })
+  filter({"platforms:Mac-x86_64"})
+    buildoptions({ "-include config_macos_x86_64.h" })
+  filter({"platforms:Mac-ARM64"})
+    buildoptions({ "-include config_macos_aarch64.h" })
+  filter({"platforms:Android-x86_64"})
+    buildoptions({ "-include config_android_x86_64.h" })
+  filter({"platforms:Android-ARM64"})
+    buildoptions({ "-include config_android_aarch64.h" })
+  filter({})
 
   filter("files:not wmaprodec.c")
     warnings "Off"
@@ -120,7 +141,7 @@ project("libavcodec")
     "fft_fixed_32.c",
     "fft_init_table.c",
   })
-  filter({"platforms:Windows"})
+  filter({"platforms:Windows or platforms:Windows-ARM64 or platforms:Windows-x86_64"})
   files({
     "file_open.c",
   })
@@ -128,15 +149,20 @@ project("libavcodec")
 
   -- libavcodec/aarch64/Makefile:
   --   OBJS:
-  filter({"platforms:Android-ARM64"})
+  filter({"platforms:Android-ARM64 or platforms:Linux-ARM64 or platforms:Mac-ARM64 or platforms:Windows-ARM64"})
   files({
     "aarch64/fft_init_aarch64.c",
     "aarch64/idctdsp_init_aarch64.c",
     "aarch64/mpegaudiodsp_init.c",
   })
+  filter({"platforms:Windows", "architecture:ARM64"})
+  files({
+    "aarch64/fft_init_aarch64.c",
+    "aarch64/idctdsp_init_aarch64.c",
+  })
   filter({})
   --   NEON-OBJS:
-  filter({"platforms:Android-ARM64"})
+  filter({"platforms:Android-ARM64 or platforms:Linux-ARM64 or platforms:Mac-ARM64"})
   files({
     "aarch64/fft_neon.S",
     "aarch64/simple_idct_neon.S",
@@ -147,7 +173,7 @@ project("libavcodec")
 
   -- libavcodec/x86/Makefile:
   --   OBJS:
-  filter({"platforms:Android-x86_64 or platforms:Linux or platforms:Windows"})
+  filter({"platforms:Android-x86_64 or platforms:Linux-x86_64 or platforms:Mac-x86_64 or platforms:Windows-x86_64"})
   files({
     "x86/constants.c",
     "x86/dct_init.c",
@@ -156,10 +182,43 @@ project("libavcodec")
     "x86/idctdsp_init.c",
     "x86/mpegaudiodsp.c",
   })
+  filter({"platforms:Windows", "architecture:x86_64"})
+  files({
+    "x86/constants.c",
+    "x86/fdctdsp_init.c",
+    "x86/fft_init.c",
+    "x86/idctdsp_init.c",
+  })
   filter({})
   --   MMX-OBJS:
-  filter({"platforms:Android-x86_64 or platforms:Linux or platforms:Windows"})
+  filter({"platforms:Android-x86_64 or platforms:Linux-x86_64 or platforms:Mac-x86_64 or platforms:Windows-x86_64"})
+  files({
+    "x86/fdct.c",
+  })
+  filter({"platforms:Windows", "architecture:x86_64"})
   files({
     "x86/fdct.c",
   })
   filter({})
+
+  -- For cmake compatibility (premake-cmake doesn't properly handle platform filters)
+  -- These files are added unconditionally based on target OS and arch at premake time
+  if os.istarget("linux") then
+    if TARGET_ARCH == "x86_64" then
+      files({
+        "x86/constants.c",
+        "x86/fdctdsp_init.c",
+        "x86/fft_init.c",
+        "x86/idctdsp_init.c",
+        "x86/fdct.c",
+      })
+    elseif TARGET_ARCH == "ARM64" then
+      files({
+        "aarch64/fft_init_aarch64.c",
+        "aarch64/idctdsp_init_aarch64.c",
+        "aarch64/fft_neon.S",
+        "aarch64/simple_idct_neon.S",
+        "aarch64/mdct_neon.S",
+      })
+    end
+  end
