@@ -120,7 +120,7 @@ project("libavcodec")
     "fft_fixed_32.c",
     "fft_init_table.c",
   })
-  filter({"platforms:Windows"})
+  filter({"platforms:Windows*"})
   files({
     "file_open.c",
   })
@@ -147,7 +147,7 @@ project("libavcodec")
 
   -- libavcodec/x86/Makefile:
   --   OBJS:
-  filter({"platforms:Android-x86_64 or platforms:Linux or platforms:Windows"})
+  filter({"platforms:Android-x86_64 or platforms:Linux or platforms:Windows or platforms:Windows-x86_64"})
   files({
     "x86/constants.c",
     "x86/dct_init.c",
@@ -158,7 +158,7 @@ project("libavcodec")
   })
   filter({})
   --   MMX-OBJS:
-  filter({"platforms:Android-x86_64 or platforms:Linux or platforms:Windows"})
+  filter({"platforms:Android-x86_64 or platforms:Linux or platforms:Windows or platforms:Windows-x86_64"})
   files({
     "x86/fdct.c",
   })

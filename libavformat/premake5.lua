@@ -52,7 +52,7 @@ project("libavformat")
     "replaygain.c",
     "file.c",
   })
-  filter({"platforms:Windows"})
+  filter({"platforms:Windows*"})
   files({
     "file_open.c",
   })

@@ -210,7 +210,7 @@ project("libavutil")
 
   -- libavutil/x86/Makefile:
   --   OBJS:
-  filter({"platforms:Android-x86_64 or platforms:Linux or platforms:Windows"})
+  filter({"platforms:Android-x86_64 or platforms:Linux or platforms:Windows or platforms:Windows-x86_64"})
   files({
     "x86/cpu.c",
     "x86/fixed_dsp_init.c",
